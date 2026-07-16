@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Weather Wall</title>
+<style>
+  :root{
+    --bg-top: #cfe6f5;
+    --bg-bot: #eef4ee;
+    --ink: #1c2320;
+    --ink-soft: #55605a;
+    --card: rgba(255,255,255,0.7);
+    --card-border: rgba(0,0,0,0.14);
+    --accent: #d98a3d;
+    --transition: background 2.5s ease, color 2.5s ease;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin:0; padding:0; width:100%; height:100%;
+    overflow:hidden; overscroll-behavior:none;
+    font-family: -apple-system, "SF Pro Text", Roboto, "Segoe UI", system-ui, sans-serif;
+    background: linear-gradient(180deg, var(--bg-top), var(--bg-bot));
+    color: var(--ink);
+    transition: var(--transition);
+  }
+  .app { height:100%; display:flex; flex-direction:column; }
+
+  .topbar {
+    flex: 0 0 auto;
+    padding: clamp(16px, 3.5vh, 30px) 6vw 4px;
+    text-align:center;
+  }
+  .clock {
+    font-size: clamp(3.6rem, 15vw, 8rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    line-height:1;
+  }
+  .clock span.ampm { font-size:0.36em; font-weight:700; margin-left:0.15em; color:var(--ink-soft); }
+  .dateline {
+    margin-top: 0.3em;
+    font-size: clamp(1rem, 3.4vw, 1.5rem);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 700;
+  }
+
+  .pager {
+    flex: 1 1 auto;
+    display:flex;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width:none;
+  }
+  .pager::-webkit-scrollbar{ display:none; }
+
+  .page {
+    flex: 0 0 100%;
+    scroll-snap-align: center;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content: space-evenly;
+    padding: 1vh 6vw clamp(6px, 2vh, 16px);
+    text-align:center;
+  }
+
+  .place-block { flex: 0 0 auto; }
+  .place {
+    font-size: clamp(1.5rem, 6vw, 2.6rem);
+    font-weight: 800;
+    letter-spacing: 0.005em;
+    margin-bottom: 0.1em;
+  }
+  .place .sub { display:block; font-size:0.42em; font-weight:700; color:var(--ink-soft); margin-top:6px; letter-spacing:0.02em; }
+  .local-time {
+    margin-top: 0.35em;
+    font-size: clamp(1.1rem, 4.6vw, 2rem);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-soft);
+  }
+  .local-time .ampm-sm { font-size: 0.6em; font-weight:700; margin-left:0.1em; }
+
+  .condition-block { flex: 0 0 auto; }
+  .condition-emoji { font-size: clamp(3rem, 13vw, 5.8rem); line-height:1; margin: 0; }
+  .condition-label {
+    margin-top: 0.1em;
+    font-size: clamp(1rem, 4vw, 1.5rem);
+    font-weight: 700;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .temp-row {
+    display:flex; align-items:baseline; justify-content:center; gap:0.35em;
+    margin-top: 0.1em;
+  }
+  .temp-f {
+    font-size: clamp(4.6rem, 20vw, 9.6rem);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+  }
+  .temp-c {
+    font-size: clamp(1.9rem, 7.4vw, 3.4rem);
+    font-weight: 700;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .humidity {
+    margin-top: 0.15em;
+    font-size: clamp(1.2rem, 5vw, 2rem);
+    color: var(--ink-soft);
+    font-weight: 700;
+  }
+  .humidity b { color:var(--ink); font-weight:800; }
+
+  .forecast-strip {
+    flex: 0 0 auto;
+    margin-top: 0.4em;
+    display:flex;
+    gap: clamp(8px, 2.6vw, 16px);
+    width:100%;
+    justify-content:center;
+  }
+  .slot {
+    flex: 1 1 0;
+    max-width: 160px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: clamp(10px, 2.6vh, 18px) 0.3em;
+    backdrop-filter: blur(6px);
+  }
+  .slot .t { font-size: clamp(0.85rem, 3vw, 1.15rem); color:var(--ink-soft); font-weight:800; text-transform:uppercase; letter-spacing:0.04em;}
+  .slot .e { font-size: clamp(1.6rem, 6vw, 2.6rem); margin:0.2em 0; }
+  .slot .f { font-size: clamp(1.3rem, 4.6vw, 2rem); font-weight:800; font-variant-numeric: tabular-nums; }
+  .slot .c { font-size: clamp(0.85rem, 3vw, 1.1rem); color:var(--ink-soft); font-variant-numeric: tabular-nums; font-weight:600; }
+
+  .daily-forecast {
+    flex: 0 0 auto;
+    margin-top: clamp(10px, 2vh, 20px);
+    width: 100%;
+    max-width: 480px;
+    border-top: 1px solid var(--card-border);
+  }
+  .day-row {
+    display:flex;
+    align-items:center;
+    gap: clamp(8px, 2vw, 14px);
+    padding: clamp(8px, 1.6vh, 14px) 4px;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .day-row .d-name {
+    flex: 0 0 auto;
+    width: 3.4em;
+    text-align:left;
+    font-size: clamp(0.95rem, 3.4vw, 1.25rem);
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+  .day-row .d-emoji {
+    flex: 0 0 auto;
+    font-size: clamp(1.3rem, 5vw, 1.9rem);
+    width: 1.6em;
+  }
+  .day-row .d-label {
+    flex: 1 1 auto;
+    text-align:left;
+    font-size: clamp(0.8rem, 2.8vw, 1.05rem);
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+  .day-row .d-temps {
+    flex: 0 0 auto;
+    text-align:right;
+    font-size: clamp(0.95rem, 3.2vw, 1.25rem);
+    font-variant-numeric: tabular-nums;
+  }
+  .day-row .d-temps .hi { font-weight: 800; }
+  .day-row .d-temps .lo { color: var(--ink-soft); font-weight: 600; }
+  .day-row .d-temps .c { display:block; font-size: 0.72em; color: var(--ink-soft); font-weight:600; margin-top:1px; }
+
+  .status {
+    margin-top: 1em;
+    font-size: clamp(1rem, 3.6vw, 1.3rem);
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
+  .dots {
+    flex: 0 0 auto;
+    display:flex; justify-content:center; gap:10px;
+    padding: 1vh 0 clamp(12px, 2.4vh, 20px);
+  }
+  .dot { width:9px; height:9px; border-radius:50%; background: var(--ink-soft); opacity:0.4; transition: opacity .3s, background .3s; }
+  .dot.active { opacity:1; background:var(--accent); }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="clock" id="clock">--:--<span class="ampm" id="ampm"></span></div>
+    <div class="dateline" id="dateline">&nbsp;</div>
+  </div>
+
+  <div class="pager" id="pager"></div>
+
+  <div class="dots" id="dots"></div>
+</div>
+
+<script>
+/* ===================== CONFIG ===================== */
+/* Home page uses coordinates for 360 Sylvan Ave, Mountain View, CA.
+   Note: weather forecast models resolve at roughly 1-11km grid spacing,
+   so a city-center coordinate and a specific street address return
+   essentially identical forecast data. */
+const LOCATIONS = [
+  { id:"home",        label:"Mountain View",    sub:"California, USA",    lat:37.3947, lon:-122.0938, showLocalTime:false },
+  { id:"sangiorgio",  label:"San Giorgio",      sub:"Roasio, VC · Italy", lat:45.608,  lon:8.288  },
+  { id:"napa",        label:"Napa",             sub:"California, USA",    lat:38.2975, lon:-122.2869, showLocalTime:false },
+  { id:"mis",         label:"Mis",              sub:"Sagron Mis, Trentino · Italy", lat:46.194, lon:11.962 },
+  { id:"payerne",     label:"Payerne",          sub:"Switzerland",        lat:46.8225, lon:6.9392 },
+];
+
+const FORECAST_HOURS = [8, 12, 15, 18];
+const REFRESH_MS = 10 * 60 * 1000;
+
+/* ===================== WEATHER CODE -> EMOJI + LABEL ===================== */
+const WEATHER_CODE_MAP = {
+  0:  ["☀️", "Clear"],
+  1:  ["🌤️", "Mostly Clear"],
+  2:  ["⛅", "Partly Cloudy"],
+  3:  ["☁️", "Overcast"],
+  45: ["🌫️", "Fog"],
+  48: ["🌫️", "Fog"],
+  51: ["🌦️", "Light Drizzle"],
+  53: ["🌦️", "Drizzle"],
+  55: ["🌦️", "Heavy Drizzle"],
+  56: ["🌧️", "Freezing Drizzle"],
+  57: ["🌧️", "Freezing Drizzle"],
+  61: ["🌧️", "Light Rain"],
+  63: ["🌧️", "Rain"],
+  65: ["🌧️", "Heavy Rain"],
+  66: ["🌧️", "Freezing Rain"],
+  67: ["🌧️", "Freezing Rain"],
+  71: ["❄️", "Light Snow"],
+  73: ["❄️", "Snow"],
+  75: ["❄️", "Heavy Snow"],
+  77: ["❄️", "Snow Grains"],
+  80: ["🌦️", "Rain Showers"],
+  81: ["🌧️", "Rain Showers"],
+  82: ["🌧️", "Heavy Showers"],
+  85: ["🌨️", "Snow Showers"],
+  86: ["🌨️", "Snow Showers"],
+  95: ["⛈️", "Thunderstorm"],
+  96: ["⛈️", "Thunderstorm"],
+  99: ["⛈️", "Severe Storm"],
+};
+function codeToEmoji(code){ return (WEATHER_CODE_MAP[code] || ["🌡️","Weather"])[0]; }
+function codeToLabel(code){ return (WEATHER_CODE_MAP[code] || ["🌡️","Weather"])[1]; }
+
+/* ===================== THEME (time-of-day reactive) ===================== */
+function daynessFromHour(hourFloat){
+  if (hourFloat >= 8 && hourFloat <= 17) return 1;
+  if (hourFloat >= 5 && hourFloat < 8) return (hourFloat - 5) / 3;
+  if (hourFloat > 17 && hourFloat <= 20) return 1 - (hourFloat - 17) / 3;
+  return 0;
+}
+function lerp(a,b,t){ return a + (b-a)*t; }
+function lerpColor(hexA, hexB, t){
+  const a = hexA.match(/\w\w/g).map(x=>parseInt(x,16));
+  const b = hexB.match(/\w\w/g).map(x=>parseInt(x,16));
+  const c = a.map((v,i)=>Math.round(lerp(v, b[i], t)));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+const PALETTE = {
+  day:   { top:"#cfe6f5", bot:"#eef4ee", ink:"#14201a", inkSoft:"#3e4a43", card:"rgba(255,255,255,0.72)", border:"rgba(0,0,0,0.16)", accent:"#c56d1f" },
+  night: { top:"#0b0f1a", bot:"#161b2a", ink:"#f3f5f8", inkSoft:"#b7c0cd", card:"rgba(255,255,255,0.10)", border:"rgba(255,255,255,0.20)", accent:"#8fb4e6" },
+};
+function applyTheme(dayness){
+  const root = document.documentElement.style;
+  root.setProperty("--bg-top", lerpColor(PALETTE.night.top, PALETTE.day.top, dayness));
+  root.setProperty("--bg-bot", lerpColor(PALETTE.night.bot, PALETTE.day.bot, dayness));
+  root.setProperty("--ink", lerpColor(PALETTE.night.ink, PALETTE.day.ink, dayness));
+  root.setProperty("--ink-soft", lerpColor(PALETTE.night.inkSoft, PALETTE.day.inkSoft, dayness));
+  root.setProperty("--card", dayness > 0.5 ? PALETTE.day.card : PALETTE.night.card);
+  root.setProperty("--card-border", dayness > 0.5 ? PALETTE.day.border : PALETTE.night.border);
+  root.setProperty("--accent", lerpColor(PALETTE.night.accent, PALETTE.day.accent, dayness));
+
+  const pct = Math.round(35 + dayness * 65);
+  try {
+    if (window.fully && typeof window.fully.setScreenBrightness === "function") {
+      window.fully.setScreenBrightness(pct);
+    }
+  } catch(e) {}
+}
+
+/* ===================== TOP CLOCK (always Pacific Time) ===================== */
+function tickTopClock(){
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString("en-US", {
+    timeZone: "America/Los_Angeles", hour: "numeric", minute: "2-digit", hour12: true
+  });
+  const [main, ampm] = timeStr.split(" ");
+  document.getElementById("clock").firstChild.textContent = main;
+  document.getElementById("ampm").textContent = ampm;
+
+  const dateStr = now.toLocaleDateString("en-US", {
+    timeZone: "America/Los_Angeles", weekday: "short", month: "2-digit", day: "2-digit"
+  });
+  document.getElementById("dateline").textContent = dateStr.replace(",", "");
+}
+
+/* ===================== PER-LOCATION LOCAL CLOCK ===================== */
+function formatLocalTime(offsetSeconds){
+  const d = new Date(Date.now() + offsetSeconds*1000);
+  let h = d.getUTCHours();
+  const m = d.getUTCMinutes();
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12; if (h === 0) h = 12;
+  return `${h}:${String(m).padStart(2,"0")}<span class="ampm-sm">${ampm}</span>`;
+}
+function tickLocalClocks(){
+  LOCATIONS.forEach(loc => {
+    const off = weatherCache[loc.id] && weatherCache[loc.id].utc_offset_seconds;
+    const el = document.getElementById(`localtime-${loc.id}`);
+    if (el && off != null) el.innerHTML = formatLocalTime(off);
+  });
+}
+
+/* ===================== BUILD PAGES ===================== */
+const pager = document.getElementById("pager");
+const dotsWrap = document.getElementById("dots");
+
+LOCATIONS.forEach((loc, i) => {
+  const page = document.createElement("div");
+  page.className = "page";
+  page.id = "page-" + loc.id;
+  page.innerHTML = `
+    <div class="place-block">
+      <div class="place">${loc.label}${loc.sub ? `<span class="sub">${loc.sub}</span>` : ""}</div>
+      ${loc.showLocalTime === false ? "" : `<div class="local-time" id="localtime-${loc.id}">--:--</div>`}
+    </div>
+    <div class="condition-block">
+      <div class="condition-emoji" id="emoji-${loc.id}">…</div>
+      <div class="condition-label" id="label-${loc.id}">Loading</div>
+      <div class="temp-row">
+        <div class="temp-f" id="tempf-${loc.id}">--°</div>
+        <div class="temp-c" id="tempc-${loc.id}">--°C</div>
+      </div>
+      <div class="humidity" id="humidity-${loc.id}">Humidity —</div>
+    </div>
+    <div class="forecast-strip" id="strip-${loc.id}"></div>
+    <div class="daily-forecast" id="daily-${loc.id}"></div>
+    <div class="status" id="status-${loc.id}"></div>
+  `;
+  pager.appendChild(page);
+
+  const dot = document.createElement("div");
+  dot.className = "dot" + (i === 0 ? " active" : "");
+  dot.dataset.index = i;
+  dotsWrap.appendChild(dot);
+});
+const dotEls = Array.from(dotsWrap.children);
+
+/* ===================== SWIPE / DOTS SYNC ===================== */
+let currentIndex = 0;
+pager.addEventListener("scroll", () => {
+  const idx = Math.round(pager.scrollLeft / pager.clientWidth);
+  if (idx !== currentIndex) {
+    currentIndex = idx;
+    dotEls.forEach((d,i)=> d.classList.toggle("active", i===idx));
+    updateThemeForCurrentPage();
+  }
+});
+
+/* ===================== WEATHER FETCH ===================== */
+const weatherCache = {};
+
+async function fetchWeather(loc){
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}` +
+              `&current=temperature_2m,relative_humidity_2m,weather_code` +
+              `&hourly=temperature_2m,weather_code` +
+              `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
+              `&timezone=auto&forecast_days=5`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("weather fetch failed: " + res.status);
+  return res.json();
+}
+
+function cToF(c){ return c * 9/5 + 32; }
+
+function pickForecastSlots(data){
+  const times = data.hourly.time;
+  const temps = data.hourly.temperature_2m;
+  const codes = data.hourly.weather_code;
+  const nowLocal = data.current.time;
+  const slots = [];
+  for (let i = 0; i < times.length && slots.length < FORECAST_HOURS.length; i++){
+    if (times[i] <= nowLocal) continue;
+    const hour = parseInt(times[i].slice(11,13), 10);
+    if (FORECAST_HOURS.includes(hour)) {
+      slots.push({ time: times[i], hour, temp: temps[i], code: codes[i] });
+    }
+  }
+  return slots;
+}
+
+function renderLocation(loc, data){
+  const cur = data.current;
+  document.getElementById(`emoji-${loc.id}`).textContent = codeToEmoji(cur.weather_code);
+  document.getElementById(`label-${loc.id}`).textContent = codeToLabel(cur.weather_code);
+  document.getElementById(`tempf-${loc.id}`).textContent = Math.round(cToF(cur.temperature_2m)) + "°F";
+  document.getElementById(`tempc-${loc.id}`).textContent = Math.round(cur.temperature_2m) + "°C";
+  document.getElementById(`humidity-${loc.id}`).innerHTML = `Humidity <b>${Math.round(cur.relative_humidity_2m)}%</b>`;
+  document.getElementById(`status-${loc.id}`).textContent = "";
+
+  const strip = document.getElementById(`strip-${loc.id}`);
+  strip.innerHTML = "";
+  pickForecastSlots(data).forEach(slot => {
+    const d = document.createElement("div");
+    d.className = "slot";
+    const label = formatHourLabel(slot.hour);
+    d.innerHTML = `
+      <div class="t">${label}</div>
+      <div class="e">${codeToEmoji(slot.code)}</div>
+      <div class="f">${Math.round(cToF(slot.temp))}°</div>
+      <div class="c">${Math.round(slot.temp)}°C</div>
+    `;
+    strip.appendChild(d);
+  });
+
+  renderDaily(loc, data);
+  tickLocalClocks();
+}
+
+const WEEKDAY_ABBR = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+function dayLabelFor(dateStr, index){
+  if (index === 0) return "Today";
+  const [y,m,d] = dateStr.split("-").map(Number);
+  const dow = new Date(Date.UTC(y, m-1, d)).getUTCDay();
+  return WEEKDAY_ABBR[dow];
+}
+
+function renderDaily(loc, data){
+  const daily = data.daily;
+  if (!daily) return;
+  const wrap = document.getElementById(`daily-${loc.id}`);
+  wrap.innerHTML = "";
+  for (let i = 0; i < daily.time.length; i++){
+    const row = document.createElement("div");
+    row.className = "day-row";
+    row.innerHTML = `
+      <div class="d-name">${dayLabelFor(daily.time[i], i)}</div>
+      <div class="d-emoji">${codeToEmoji(daily.weather_code[i])}</div>
+      <div class="d-label">${codeToLabel(daily.weather_code[i])}</div>
+      <div class="d-temps">
+        <span class="hi">${Math.round(cToF(daily.temperature_2m_max[i]))}°</span>
+        <span class="lo">/${Math.round(cToF(daily.temperature_2m_min[i]))}°F</span>
+        <span class="c">${Math.round(daily.temperature_2m_max[i])}° / ${Math.round(daily.temperature_2m_min[i])}°C</span>
+      </div>
+    `;
+    wrap.appendChild(row);
+  }
+}
+
+function formatHourLabel(h){
+  const ampm = h >= 12 ? "PM" : "AM";
+  let hr = h % 12; if (hr === 0) hr = 12;
+  return hr + ampm;
+}
+
+function showStatus(loc, msg){
+  document.getElementById(`status-${loc.id}`).textContent = msg;
+}
+
+async function loadLocation(loc){
+  try {
+    const data = await fetchWeather(loc);
+    weatherCache[loc.id] = data;
+    renderLocation(loc, data);
+    if (loc.id === LOCATIONS[currentIndex].id) updateThemeForCurrentPage();
+  } catch (e) {
+    showStatus(loc, "Couldn't load weather. Will retry shortly.");
+  }
+}
+
+/* ===================== THEME BY VISIBLE PAGE'S LOCAL TIME ===================== */
+function updateThemeForCurrentPage(){
+  const loc = LOCATIONS[currentIndex];
+  const data = weatherCache[loc.id];
+  let hourFloat;
+  if (data && data.current && data.current.time) {
+    const t = data.current.time;
+    hourFloat = parseInt(t.slice(11,13),10) + parseInt(t.slice(14,16),10)/60;
+  } else {
+    const now = new Date();
+    hourFloat = now.getHours() + now.getMinutes()/60;
+  }
+  applyTheme(daynessFromHour(hourFloat));
+}
+
+/* ===================== INIT ===================== */
+tickTopClock();
+setInterval(tickTopClock, 15000);
+setInterval(tickLocalClocks, 15000);
+
+LOCATIONS.forEach(loc => loadLocation(loc));
+
+setInterval(() => {
+  LOCATIONS.forEach(loc => loadLocation(loc));
+}, REFRESH_MS);
+
+setInterval(updateThemeForCurrentPage, 60000);
+applyTheme(daynessFromHour(new Date().getHours()));
+</script>
+</body>
+</html>
