@@ -17,22 +17,22 @@
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
-    margin:0; padding:0; width:100%; height:100%;
+    margin:0; padding:0; width:100%; height:100dvh;
     overflow:hidden; overscroll-behavior:none;
     font-family: -apple-system, "SF Pro Text", Roboto, "Segoe UI", system-ui, sans-serif;
     background: linear-gradient(180deg, var(--bg-top), var(--bg-bot));
     color: var(--ink);
     transition: var(--transition);
   }
-  .app { height:100%; display:flex; flex-direction:column; }
+  .app { height:100dvh; display:flex; flex-direction:column; position:relative; }
 
   .topbar {
     flex: 0 0 auto;
-    padding: clamp(16px, 3.5vh, 30px) 6vw 4px;
+    padding: clamp(12px, 2.6vh, 24px) 6vw 2px;
     text-align:center;
   }
   .clock {
-    font-size: clamp(3.6rem, 15vw, 8rem);
+    font-size: clamp(3.2rem, 13vw, 7rem);
     font-weight: 700;
     letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
@@ -40,47 +40,50 @@
   }
   .clock span.ampm { font-size:0.36em; font-weight:700; margin-left:0.15em; color:var(--ink-soft); }
   .dateline {
-    margin-top: 0.3em;
-    font-size: clamp(1rem, 3.4vw, 1.5rem);
+    margin-top: 0.25em;
+    font-size: clamp(0.9rem, 3vw, 1.35rem);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--ink-soft);
     font-weight: 700;
   }
 
-  .pager {
+  /* ---------- Pager (transform-based, no native swipe) ---------- */
+  .pager-viewport {
     flex: 1 1 auto;
-    display:flex;
-    overflow-x:auto;
-    overflow-y:hidden;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width:none;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
   }
-  .pager::-webkit-scrollbar{ display:none; }
-
+  .pager {
+    display:flex;
+    height:100%;
+    width:100%;
+    transition: transform 0.4s cubic-bezier(.4,0,.2,1);
+  }
   .page {
     flex: 0 0 100%;
-    scroll-snap-align: center;
+    width:100%;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content: space-evenly;
-    padding: 1vh 6vw clamp(6px, 2vh, 16px);
+    padding: 0.5vh 6vw clamp(4px, 1.4vh, 12px);
     text-align:center;
+    overflow-y:auto;
   }
 
   .place-block { flex: 0 0 auto; }
   .place {
-    font-size: clamp(1.5rem, 6vw, 2.6rem);
+    font-size: clamp(1.3rem, 5.2vw, 2.3rem);
     font-weight: 800;
     letter-spacing: 0.005em;
-    margin-bottom: 0.1em;
+    margin-bottom: 0.08em;
   }
-  .place .sub { display:block; font-size:0.42em; font-weight:700; color:var(--ink-soft); margin-top:6px; letter-spacing:0.02em; }
+  .place .sub { display:block; font-size:0.42em; font-weight:700; color:var(--ink-soft); margin-top:5px; letter-spacing:0.02em; }
   .local-time {
-    margin-top: 0.35em;
-    font-size: clamp(1.1rem, 4.6vw, 2rem);
+    margin-top: 0.2em;
+    font-size: clamp(1rem, 4vw, 1.7rem);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     color: var(--ink-soft);
@@ -88,10 +91,10 @@
   .local-time .ampm-sm { font-size: 0.6em; font-weight:700; margin-left:0.1em; }
 
   .condition-block { flex: 0 0 auto; }
-  .condition-emoji { font-size: clamp(3rem, 13vw, 5.8rem); line-height:1; margin: 0; }
+  .condition-emoji { font-size: clamp(2.6rem, 11vw, 5rem); line-height:1; margin: 0; }
   .condition-label {
-    margin-top: 0.1em;
-    font-size: clamp(1rem, 4vw, 1.5rem);
+    margin-top: 0.08em;
+    font-size: clamp(0.9rem, 3.4vw, 1.3rem);
     font-weight: 700;
     color: var(--ink-soft);
     text-transform: uppercase;
@@ -99,25 +102,25 @@
   }
 
   .temp-row {
-    display:flex; align-items:baseline; justify-content:center; gap:0.35em;
-    margin-top: 0.1em;
+    display:flex; align-items:baseline; justify-content:center; gap:0.3em;
+    margin-top: 0.08em;
   }
   .temp-f {
-    font-size: clamp(4.6rem, 20vw, 9.6rem);
+    font-size: clamp(4rem, 17vw, 8.2rem);
     font-weight: 800;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.03em;
   }
   .temp-c {
-    font-size: clamp(1.9rem, 7.4vw, 3.4rem);
+    font-size: clamp(1.7rem, 6.4vw, 3rem);
     font-weight: 700;
     color: var(--ink-soft);
     font-variant-numeric: tabular-nums;
   }
 
   .humidity {
-    margin-top: 0.15em;
-    font-size: clamp(1.2rem, 5vw, 2rem);
+    margin-top: 0.1em;
+    font-size: clamp(1rem, 4.2vw, 1.7rem);
     color: var(--ink-soft);
     font-weight: 700;
   }
@@ -125,29 +128,30 @@
 
   .forecast-strip {
     flex: 0 0 auto;
-    margin-top: 0.4em;
+    margin-top: 0.3em;
     display:flex;
-    gap: clamp(8px, 2.6vw, 16px);
+    gap: clamp(6px, 2.2vw, 14px);
     width:100%;
     justify-content:center;
   }
   .slot {
     flex: 1 1 0;
-    max-width: 160px;
+    max-width: 150px;
     background: var(--card);
     border: 1px solid var(--card-border);
-    border-radius: 20px;
-    padding: clamp(10px, 2.6vh, 18px) 0.3em;
+    border-radius: 18px;
+    padding: clamp(8px, 2vh, 14px) 0.25em;
     backdrop-filter: blur(6px);
   }
-  .slot .t { font-size: clamp(0.85rem, 3vw, 1.15rem); color:var(--ink-soft); font-weight:800; text-transform:uppercase; letter-spacing:0.04em;}
-  .slot .e { font-size: clamp(1.6rem, 6vw, 2.6rem); margin:0.2em 0; }
-  .slot .f { font-size: clamp(1.3rem, 4.6vw, 2rem); font-weight:800; font-variant-numeric: tabular-nums; }
-  .slot .c { font-size: clamp(0.85rem, 3vw, 1.1rem); color:var(--ink-soft); font-variant-numeric: tabular-nums; font-weight:600; }
+  .slot .t { font-size: clamp(0.75rem, 2.6vw, 1.05rem); color:var(--ink-soft); font-weight:800; text-transform:uppercase; letter-spacing:0.04em;}
+  .slot .e { font-size: clamp(1.4rem, 5.2vw, 2.3rem); margin:0.15em 0; }
+  .slot .f { font-size: clamp(1.15rem, 4vw, 1.8rem); font-weight:800; font-variant-numeric: tabular-nums; }
+  .slot .c { font-size: clamp(0.75rem, 2.6vw, 1rem); color:var(--ink-soft); font-variant-numeric: tabular-nums; font-weight:600; }
+  .slot .p { font-size: clamp(0.7rem, 2.4vw, 0.95rem); color:#4a9de8; font-weight:700; margin-top:2px; }
 
   .daily-forecast {
     flex: 0 0 auto;
-    margin-top: clamp(10px, 2vh, 20px);
+    margin-top: clamp(6px, 1.6vh, 16px);
     width: 100%;
     max-width: 480px;
     border-top: 1px solid var(--card-border);
@@ -155,34 +159,35 @@
   .day-row {
     display:flex;
     align-items:center;
-    gap: clamp(8px, 2vw, 14px);
-    padding: clamp(8px, 1.6vh, 14px) 4px;
+    gap: clamp(6px, 1.6vw, 12px);
+    padding: clamp(5px, 1.2vh, 10px) 4px;
     border-bottom: 1px solid var(--card-border);
   }
   .day-row .d-name {
     flex: 0 0 auto;
-    width: 3.4em;
+    width: 3.2em;
     text-align:left;
-    font-size: clamp(0.95rem, 3.4vw, 1.25rem);
+    font-size: clamp(0.85rem, 3vw, 1.1rem);
     font-weight: 800;
     letter-spacing: 0.02em;
   }
   .day-row .d-emoji {
     flex: 0 0 auto;
-    font-size: clamp(1.3rem, 5vw, 1.9rem);
-    width: 1.6em;
+    font-size: clamp(1.15rem, 4.4vw, 1.6rem);
+    width: 1.5em;
   }
   .day-row .d-label {
     flex: 1 1 auto;
     text-align:left;
-    font-size: clamp(0.8rem, 2.8vw, 1.05rem);
+    font-size: clamp(0.72rem, 2.5vw, 0.95rem);
     color: var(--ink-soft);
     font-weight: 600;
   }
+  .day-row .d-label .d-pop { color:#4a9de8; font-weight:700; }
   .day-row .d-temps {
     flex: 0 0 auto;
     text-align:right;
-    font-size: clamp(0.95rem, 3.2vw, 1.25rem);
+    font-size: clamp(0.85rem, 2.8vw, 1.1rem);
     font-variant-numeric: tabular-nums;
   }
   .day-row .d-temps .hi { font-weight: 800; }
@@ -190,8 +195,8 @@
   .day-row .d-temps .c { display:block; font-size: 0.72em; color: var(--ink-soft); font-weight:600; margin-top:1px; }
 
   .status {
-    margin-top: 1em;
-    font-size: clamp(1rem, 3.6vw, 1.3rem);
+    margin-top: 0.8em;
+    font-size: clamp(0.9rem, 3.2vw, 1.2rem);
     color: var(--ink-soft);
     font-weight: 600;
   }
@@ -199,10 +204,43 @@
   .dots {
     flex: 0 0 auto;
     display:flex; justify-content:center; gap:10px;
-    padding: 1vh 0 clamp(12px, 2.4vh, 20px);
+    padding: 0.8vh 0 clamp(10px, 2vh, 18px);
   }
   .dot { width:9px; height:9px; border-radius:50%; background: var(--ink-soft); opacity:0.4; transition: opacity .3s, background .3s; }
   .dot.active { opacity:1; background:var(--accent); }
+
+  /* ---------- Tap navigation arrows ---------- */
+  .nav-arrow {
+    position:absolute;
+    top:50%;
+    transform: translateY(-50%);
+    width: clamp(44px, 9vw, 64px);
+    height: clamp(44px, 9vw, 64px);
+    border-radius:50%;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    color: var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    font-weight:700;
+    z-index: 20;
+    opacity: 0.55;
+    user-select:none;
+    transition: opacity .2s, background .3s, border-color .3s, color .3s;
+  }
+  .nav-arrow.left { left: clamp(6px, 2vw, 18px); }
+  .nav-arrow.right { right: clamp(6px, 2vw, 18px); }
+  .nav-arrow.disabled { opacity: 0; pointer-events:none; }
+
+  /* Full-height tap zones covering left/right half of the pager area */
+  .tap-zone {
+    position:absolute;
+    top:0; bottom:0;
+    width:50%;
+    z-index: 10;
+  }
+  .tap-zone.left { left:0; }
+  .tap-zone.right { right:0; }
 </style>
 </head>
 <body>
@@ -212,17 +250,19 @@
     <div class="dateline" id="dateline">&nbsp;</div>
   </div>
 
-  <div class="pager" id="pager"></div>
+  <div class="pager-viewport" id="pagerViewport">
+    <div class="pager" id="pager"></div>
+    <div class="tap-zone left" id="tapLeft"></div>
+    <div class="tap-zone right" id="tapRight"></div>
+    <div class="nav-arrow left" id="navLeft">‹</div>
+    <div class="nav-arrow right" id="navRight">›</div>
+  </div>
 
   <div class="dots" id="dots"></div>
 </div>
 
 <script>
 /* ===================== CONFIG ===================== */
-/* Home page uses coordinates for 360 Sylvan Ave, Mountain View, CA.
-   Note: weather forecast models resolve at roughly 1-11km grid spacing,
-   so a city-center coordinate and a specific street address return
-   essentially identical forecast data. */
 const LOCATIONS = [
   { id:"home",        label:"Mountain View",    sub:"California, USA",    lat:37.3947, lon:-122.0938, showLocalTime:false },
   { id:"sangiorgio",  label:"San Giorgio",      sub:"Roasio, VC · Italy", lat:45.608,  lon:8.288  },
@@ -231,8 +271,9 @@ const LOCATIONS = [
   { id:"payerne",     label:"Payerne",          sub:"Switzerland",        lat:46.8225, lon:6.9392 },
 ];
 
-const FORECAST_HOURS = [8, 12, 15, 18];
+const HOUR_OFFSETS = [2, 4, 6, 8]; // +2h, +4h, +6h, +8h from now, per location
 const REFRESH_MS = 10 * 60 * 1000;
+const IDLE_RESET_MS = 5 * 60 * 1000; // auto-return to home after 5 min inactivity
 
 /* ===================== WEATHER CODE -> EMOJI + LABEL ===================== */
 const WEATHER_CODE_MAP = {
@@ -268,7 +309,7 @@ const WEATHER_CODE_MAP = {
 function codeToEmoji(code){ return (WEATHER_CODE_MAP[code] || ["🌡️","Weather"])[0]; }
 function codeToLabel(code){ return (WEATHER_CODE_MAP[code] || ["🌡️","Weather"])[1]; }
 
-/* ===================== THEME (time-of-day reactive) ===================== */
+/* ===================== THEME (time-of-day reactive; AMOLED-true-black night) ===================== */
 function daynessFromHour(hourFloat){
   if (hourFloat >= 8 && hourFloat <= 17) return 1;
   if (hourFloat >= 5 && hourFloat < 8) return (hourFloat - 5) / 3;
@@ -284,7 +325,7 @@ function lerpColor(hexA, hexB, t){
 }
 const PALETTE = {
   day:   { top:"#cfe6f5", bot:"#eef4ee", ink:"#14201a", inkSoft:"#3e4a43", card:"rgba(255,255,255,0.72)", border:"rgba(0,0,0,0.16)", accent:"#c56d1f" },
-  night: { top:"#0b0f1a", bot:"#161b2a", ink:"#f3f5f8", inkSoft:"#b7c0cd", card:"rgba(255,255,255,0.10)", border:"rgba(255,255,255,0.20)", accent:"#8fb4e6" },
+  night: { top:"#000000", bot:"#000000", ink:"#f3f5f8", inkSoft:"#b7c0cd", card:"rgba(255,255,255,0.08)", border:"rgba(255,255,255,0.18)", accent:"#8fb4e6" },
 };
 function applyTheme(dayness){
   const root = document.documentElement.style;
@@ -372,16 +413,51 @@ LOCATIONS.forEach((loc, i) => {
 });
 const dotEls = Array.from(dotsWrap.children);
 
-/* ===================== SWIPE / DOTS SYNC ===================== */
+/* ===================== TAP-BASED NAVIGATION ===================== */
 let currentIndex = 0;
-pager.addEventListener("scroll", () => {
-  const idx = Math.round(pager.scrollLeft / pager.clientWidth);
-  if (idx !== currentIndex) {
-    currentIndex = idx;
-    dotEls.forEach((d,i)=> d.classList.toggle("active", i===idx));
-    updateThemeForCurrentPage();
+const navLeft = document.getElementById("navLeft");
+const navRight = document.getElementById("navRight");
+
+function renderNavState(){
+  pager.style.transform = `translateX(-${currentIndex * 100}%)`;
+  dotEls.forEach((d,i)=> d.classList.toggle("active", i===currentIndex));
+  navLeft.classList.toggle("disabled", currentIndex === 0);
+  navRight.classList.toggle("disabled", currentIndex === LOCATIONS.length - 1);
+  updateThemeForCurrentPage();
+}
+
+function goToPage(delta){
+  const next = Math.min(Math.max(currentIndex + delta, 0), LOCATIONS.length - 1);
+  if (next !== currentIndex) {
+    currentIndex = next;
+    renderNavState();
   }
-});
+  resetIdleTimer();
+}
+function goToIndex(idx){
+  const next = Math.min(Math.max(idx, 0), LOCATIONS.length - 1);
+  if (next !== currentIndex) {
+    currentIndex = next;
+    renderNavState();
+  }
+  resetIdleTimer();
+}
+
+document.getElementById("tapLeft").addEventListener("click", () => goToPage(-1));
+document.getElementById("tapRight").addEventListener("click", () => goToPage(1));
+navLeft.addEventListener("click", (e) => { e.stopPropagation(); goToPage(-1); });
+navRight.addEventListener("click", (e) => { e.stopPropagation(); goToPage(1); });
+dotEls.forEach((d,i) => d.addEventListener("click", () => goToIndex(i)));
+
+/* ===================== IDLE AUTO-RETURN TO HOME ===================== */
+let idleTimer = null;
+function resetIdleTimer(){
+  if (idleTimer) clearTimeout(idleTimer);
+  idleTimer = setTimeout(() => { goToIndex(0); }, IDLE_RESET_MS);
+}
+document.addEventListener("click", resetIdleTimer, true);
+document.addEventListener("touchstart", resetIdleTimer, true);
+resetIdleTimer();
 
 /* ===================== WEATHER FETCH ===================== */
 const weatherCache = {};
@@ -389,8 +465,8 @@ const weatherCache = {};
 async function fetchWeather(loc){
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}` +
               `&current=temperature_2m,relative_humidity_2m,weather_code` +
-              `&hourly=temperature_2m,weather_code` +
-              `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
+              `&hourly=temperature_2m,weather_code,precipitation_probability` +
+              `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
               `&timezone=auto&forecast_days=5`;
   const res = await fetch(url);
   if (!res.ok) throw new Error("weather fetch failed: " + res.status);
@@ -398,20 +474,26 @@ async function fetchWeather(loc){
 }
 
 function cToF(c){ return c * 9/5 + 32; }
+function pad2(n){ return String(n).padStart(2,"0"); }
 
-function pickForecastSlots(data){
+/* Pick forecast points at fixed hour-offsets (+2h, +4h, +6h, +8h) from "now" in that location's local time */
+function pickForecastSlotsByOffset(data, offsets){
   const times = data.hourly.time;
   const temps = data.hourly.temperature_2m;
   const codes = data.hourly.weather_code;
-  const nowLocal = data.current.time;
+  const pops  = data.hourly.precipitation_probability || [];
+  const now = data.current.time; // "YYYY-MM-DDTHH:MM" local
+  const y = parseInt(now.slice(0,4),10), mo = parseInt(now.slice(5,7),10), d = parseInt(now.slice(8,10),10), h = parseInt(now.slice(11,13),10);
+  const base = Date.UTC(y, mo-1, d, h, 0); // anchor at top of current hour (arithmetic only, not real UTC)
   const slots = [];
-  for (let i = 0; i < times.length && slots.length < FORECAST_HOURS.length; i++){
-    if (times[i] <= nowLocal) continue;
-    const hour = parseInt(times[i].slice(11,13), 10);
-    if (FORECAST_HOURS.includes(hour)) {
-      slots.push({ time: times[i], hour, temp: temps[i], code: codes[i] });
+  offsets.forEach(off => {
+    const target = new Date(base + off*3600000);
+    const ts = `${target.getUTCFullYear()}-${pad2(target.getUTCMonth()+1)}-${pad2(target.getUTCDate())}T${pad2(target.getUTCHours())}:00`;
+    const idx = times.indexOf(ts);
+    if (idx !== -1) {
+      slots.push({ hour: target.getUTCHours(), temp: temps[idx], code: codes[idx], pop: pops[idx] != null ? pops[idx] : null });
     }
-  }
+  });
   return slots;
 }
 
@@ -426,15 +508,17 @@ function renderLocation(loc, data){
 
   const strip = document.getElementById(`strip-${loc.id}`);
   strip.innerHTML = "";
-  pickForecastSlots(data).forEach(slot => {
+  pickForecastSlotsByOffset(data, HOUR_OFFSETS).forEach(slot => {
     const d = document.createElement("div");
     d.className = "slot";
     const label = formatHourLabel(slot.hour);
+    const popLine = (slot.pop != null && slot.pop > 0) ? `<div class="p">💧${slot.pop}%</div>` : "";
     d.innerHTML = `
       <div class="t">${label}</div>
       <div class="e">${codeToEmoji(slot.code)}</div>
       <div class="f">${Math.round(cToF(slot.temp))}°</div>
       <div class="c">${Math.round(slot.temp)}°C</div>
+      ${popLine}
     `;
     strip.appendChild(d);
   });
@@ -459,10 +543,12 @@ function renderDaily(loc, data){
   for (let i = 0; i < daily.time.length; i++){
     const row = document.createElement("div");
     row.className = "day-row";
+    const pop = daily.precipitation_probability_max ? daily.precipitation_probability_max[i] : null;
+    const popBadge = (pop != null && pop > 0) ? ` <span class="d-pop">· 💧${pop}%</span>` : "";
     row.innerHTML = `
       <div class="d-name">${dayLabelFor(daily.time[i], i)}</div>
       <div class="d-emoji">${codeToEmoji(daily.weather_code[i])}</div>
-      <div class="d-label">${codeToLabel(daily.weather_code[i])}</div>
+      <div class="d-label">${codeToLabel(daily.weather_code[i])}${popBadge}</div>
       <div class="d-temps">
         <span class="hi">${Math.round(cToF(daily.temperature_2m_max[i]))}°</span>
         <span class="lo">/${Math.round(cToF(daily.temperature_2m_min[i]))}°F</span>
@@ -514,6 +600,7 @@ tickTopClock();
 setInterval(tickTopClock, 15000);
 setInterval(tickLocalClocks, 15000);
 
+renderNavState();
 LOCATIONS.forEach(loc => loadLocation(loc));
 
 setInterval(() => {
@@ -521,6 +608,9 @@ setInterval(() => {
 }, REFRESH_MS);
 
 setInterval(updateThemeForCurrentPage, 60000);
+setInterval(() => {
+  if (idleTimer === null) return; // idle system active; check handled via setTimeout already
+}, 30000);
 applyTheme(daynessFromHour(new Date().getHours()));
 </script>
 </body>
